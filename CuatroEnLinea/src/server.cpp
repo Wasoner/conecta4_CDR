@@ -12,6 +12,7 @@ const int n = 6;
 const int m = 7;
 vector<vector<char>> board(n, vector<char>(m, '.'));
 
+// Función para imprimir el tablero
 void ImprimirTablero() {
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < m; ++j) {
@@ -26,6 +27,7 @@ void ImprimirTablero() {
     cout << endl;
 }
 
+// Verificar si hay espacios libres en el tablero
 bool sobranEspaciosLibres() {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
@@ -34,10 +36,10 @@ bool sobranEspaciosLibres() {
             }
         }
     }
-    cout << "No hay más espacios: empate" << endl;
     return false;
 }
 
+// Colocar ficha en la columna especificada
 int ColocarFichaEn(int columna, char ficha) {
     for (int i = n - 1; i >= 0; --i) {
         if (board[i][columna] == '.') {
@@ -48,6 +50,7 @@ int ColocarFichaEn(int columna, char ficha) {
     return -1;
 }
 
+// Verificar si hay un ganador
 bool ganador(int fila, int columna, char ficha) {
     // Verificar vertical
     int count = 0;
@@ -111,6 +114,7 @@ bool ganador(int fila, int columna, char ficha) {
     return false;
 }
 
+// Manejar la conexión con un cliente
 void handleClient(int client_socket) {
     char buffer[1024];
     char ficha_cliente = 'C', ficha_servidor = 'S';
@@ -119,32 +123,41 @@ void handleClient(int client_socket) {
     while (true) {
         memset(buffer, 0, sizeof(buffer));
         if (!turno_servidor) {
+            // Enviar mensaje al cliente para que juegue
             send(client_socket, "Tu turno: ", 10, 0);
             int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
             if (bytes_received <= 0) break;
 
-            int columna = atoi(buffer) - 1;
+            int columna = atoi(buffer) - 1; // Ajustar a índice basado en cero
             if (columna >= 0 && columna < m && board[0][columna] == '.') {
                 int fila = ColocarFichaEn(columna, ficha_cliente);
                 ImprimirTablero();
+                // Verificar si el cliente ganó
                 if (ganador(fila, columna, ficha_cliente)) {
                     send(client_socket, "Ganaste!\n", 9, 0);
+                    cout << "Cliente ganó!" << endl; // Mensaje de depuración
                     break;
                 }
                 turno_servidor = true;
+            } else {
+                send(client_socket, "Columna invalida. Intente de nuevo.\n", 36, 0);
             }
         } else {
-            // Lógica del turno del servidor
+            // Turno del servidor (jugada aleatoria)
             int columna = rand() % m;
             while (board[0][columna] != '.') columna = rand() % m;
             int fila = ColocarFichaEn(columna, ficha_servidor);
             ImprimirTablero();
+            // Verificar si el servidor ganó
             if (ganador(fila, columna, ficha_servidor)) {
                 send(client_socket, "Perdiste!\n", 10, 0);
+                cout << "Servidor ganó!" << endl; // Mensaje de depuración
                 break;
             }
             turno_servidor = false;
         }
+
+        // Verificar si hay empate
         if (!sobranEspaciosLibres()) {
             send(client_socket, "Empate!\n", 8, 0);
             break;
@@ -160,12 +173,15 @@ int main(int argc, char* argv[]) {
     }
 
     int port = atoi(argv[1]);
+
+    // Crear el socket del servidor
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
         cerr << "Error creating socket" << endl;
         return 1;
     }
 
+    // Configurar la dirección del servidor
     sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
@@ -183,6 +199,7 @@ int main(int argc, char* argv[]) {
 
     cout << "Server listening on port " << port << endl;
 
+    // Esperar conexiones de clientes
     while (true) {
         sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
@@ -192,6 +209,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
+        // Crear un nuevo hilo para manejar la conexión del cliente
         thread t(handleClient, client_socket);
         t.detach();
     }
