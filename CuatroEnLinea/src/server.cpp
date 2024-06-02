@@ -150,7 +150,7 @@ void handleClient(int client_socket) {
             ImprimirTablero();
             // Verificar si el servidor ganó
             if (ganador(fila, columna, ficha_servidor)) {
-                send(client_socket, "Perdiste!\n", 10, 0);
+                send(client_socket, "Perdiste! (UnU) \n", 10, 0);
                 cout << "Servidor ganó!" << endl; // Mensaje de depuración
                 break;
             }
@@ -159,7 +159,7 @@ void handleClient(int client_socket) {
 
         // Verificar si hay empate
         if (!sobranEspaciosLibres()) {
-            send(client_socket, "Empate!\n", 8, 0);
+            send(client_socket, "Empate! \n", 8, 0);
             break;
         }
     }
@@ -168,7 +168,7 @@ void handleClient(int client_socket) {
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        cerr << "Usage: " << argv[0] << " <port>" << endl;
+        cerr << "Modo de uso: " << argv[0] << " <puerto>" << endl;
         return 1;
     }
 
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
     // Crear el socket del servidor
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
-        cerr << "Error creating socket" << endl;
+        cerr << "UPS hubo un error al crear el socket" << endl;
         return 1;
     }
 
@@ -188,16 +188,16 @@ int main(int argc, char* argv[]) {
     server_addr.sin_port = htons(port);
 
     if (bind(server_socket, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        cerr << "Error binding socket" << endl;
+        cerr << "UPS hubo un error en vincular el socket" << endl;
         return 1;
     }
 
     if (listen(server_socket, 5) < 0) {
-        cerr << "Error listening on socket" << endl;
+        cerr << "No puedo escuchar el socket" << endl;
         return 1;
     }
 
-    cout << "Server listening on port " << port << endl;
+    cout << "Estare escuchando en el puerto:  " << port << endl;
 
     // Esperar conexiones de clientes
     while (true) {
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
         socklen_t client_len = sizeof(client_addr);
         int client_socket = accept(server_socket, (sockaddr*)&client_addr, &client_len);
         if (client_socket < 0) {
-            cerr << "Error accepting connection" << endl;
+            cerr << "Error al permitir la conexion con el cliente" << endl;
             return 1;
         }
 
