@@ -9,10 +9,10 @@ BIN_DIR = bin
 #Targets
 all: server client
 
-server: $(BIN_DIR)/server.cpp
+server: $(SRC_DIR)/server.cpp
 	$(CC) $(CFLAGS) $(SRC_DIR)/server.cpp -o $(BIN_DIR)/server $(LDFLAGS)
 
-client: $(BIN_DIR)/client.cpp
+client: $(SRC_DIR)/client.cpp
 	$(CC) $(CFLAGS) $(SRC_DIR)/client.cpp -o $(BIN_DIR)/client $(LDFLAGS)
 
 clean:
