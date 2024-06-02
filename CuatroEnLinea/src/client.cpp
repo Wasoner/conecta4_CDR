@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     const char *server_ip = argv[1];
     int port = atoi(argv[2]);
 
+    // Crear el socket del cliente
     int client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket < 0)
     {
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Configurar la dirección del servidor
     sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
@@ -34,15 +36,15 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (connect(client_socket, (sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-    {
+    // Conectar al servidor
+    if (connect(client_socket, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         cerr << "Connection failed" << endl;
         return 1;
     }
 
     char buffer[1024];
-    while (true)
-    {
+    while (true) {
+        // Recibir el estado del juego del servidor
         memset(buffer, 0, sizeof(buffer));
         int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
         if (bytes_received <= 0)
@@ -50,15 +52,19 @@ int main(int argc, char *argv[])
 
         cout << buffer;
 
+        // Verificar si se ha ganado o terminado el juego
+        if (strstr(buffer, "Ganaste!") != nullptr || strstr(buffer, "Perdiste!") != nullptr || strstr(buffer, "Empate!") != nullptr) {
+            break;
+        }
+
         int columna;
-        while (true)
-        {
-            cout << "Introduce la columna(1-7): ";
+        while (true) {
+            // Solicitar al usuario que introduzca una columna válida
+            cout << "Introduce la columna (1-7): ";
             cin >> columna;
-            if (cin.fail() || columna < 1 || columna > 7)
-            {
+            if (cin.fail() || columna < 1 || columna > 7) {
                 cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // para descartar la entrada
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 cout << "Columna invalida, intente de nuevo" << endl;
             }
             else
@@ -66,10 +72,12 @@ int main(int argc, char *argv[])
                 break;
             }
         }
-        sprintf(buffer, "%d", columna - 1); // para enviar la columna ajustado a 0
+        // Enviar la columna seleccionada al servidor
+        sprintf(buffer, "%d", columna);
         send(client_socket, buffer, strlen(buffer), 0);
-
-        close(client_socket);
-        return 0;
     }
+
+    // Cerrar el socket del cliente al terminar el juego
+    close(client_socket);
+    return 0;
 }
